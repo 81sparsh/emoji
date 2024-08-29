@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capture Website</title>
+  <style>
+    video, canvas { display: block; margin: 10px auto; }
+    button { display: block; margin: 10px auto; }
+  </style>
+</head>
+<body>
+  <h1>Capture Images</h1>
+  <video id="video" width="320" height="240" autoplay></video>
+  <button id="capture">Capture</button>
+  <canvas id="canvas" width="320" height="240"></canvas>
+  <button id="upload">Upload All Images</button>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureButton = document.getElementById('capture');
+    const uploadButton = document.getElementById('upload');
+    const context = canvas.getContext('2d');
+
+    // Access webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      });
+
+    // Capture image
+    captureButton.addEventListener('click', () => {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+      storeImage(imageData);
+    });
+
+    // Store captured image in local storage
+    function storeImage(imageData) {
+      const images = JSON.parse(localStorage.getItem('capturedImages')) || [];
+      images.push(imageData);
+      localStorage.setItem('capturedImages', JSON.stringify(images));
+    }
+
+    // Upload all images
+    uploadButton.addEventListener('click', () => {
+      const images = JSON.parse(localStorage.getItem('capturedImages')) || [];
+      images.forEach(uploadImage);
+    });
+
+    // Upload single image to the server
+    function uploadImage(imageData) {
+      fetch(imageData)
+        .then(res => res.blob())
+        .then(blob => {
+          const formData = new FormData();
+          formData.append('image', blob, 'image.png');
+
+          fetch('http://localhost:3000/upload', {
+            method: 'POST',
+            body: formData,
+          })
+          .then(response => response.json())
+          .then(data => console.log('Upload success:', data))
+          .catch(error => console.error('Upload error:', error));
+        });
+    }
+  </script>
+</body>
+</html>

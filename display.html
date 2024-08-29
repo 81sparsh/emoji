@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Display Website</title>
+  <style>
+    img { display: block; margin: 10px auto; max-width: 100%; }
+    button { display: block; margin: 10px auto; }
+  </style>
+</head>
+<body>
+  <h1>Uploaded Images</h1>
+  <div id="image-container"></div>
+
+  <script>
+    // Fetch all images from the server
+    function fetchImages() {
+      fetch('http://localhost:3000/images')
+        .then(response => response.json())
+        .then(images => {
+          const container = document.getElementById('image-container');
+          container.innerHTML = ''; // Clear existing images
+          images.forEach(image => {
+            const img = document.createElement('img');
+            img.src = `http://localhost:3000/uploads/${image}`;
+            img.alt = image;
+            img.width = 320;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = () => deleteImage(image);
+
+            container.appendChild(img);
+            container.appendChild(deleteButton);
+          });
+        });
+    }
+
+    // Delete an image from the server
+    function deleteImage(filename) {
+      fetch(`http://localhost:3000/delete/${filename}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(() => fetchImages())
+        .catch(error => console.error('Delete error:', error));
+    }
+
+    fetchImages(); // Initial fetch
+  </script>
+</body>
+</html>
