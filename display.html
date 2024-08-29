@@ -13,38 +13,55 @@
   <div id="image-container"></div>
 
   <script>
-    // Fetch all images from the server
-    function fetchImages() {
-      fetch('http://localhost:3000/images')
-        .then(response => response.json())
-        .then(images => {
-          const container = document.getElementById('image-container');
-          container.innerHTML = ''; // Clear existing images
-          images.forEach(image => {
-            const img = document.createElement('img');
-            img.src = `http://localhost:3000/uploads/${image}`;
-            img.alt = image;
-            img.width = 320;
+   // Fetch and display all images from the backend
+function fetchAndDisplayImages() {
+  fetch('https://emojicamera.vercel.app/api/images')  // Adjusted URL
+    .then(response => response.json())
+    .then(images => {
+      const imageContainer = document.getElementById('imageContainer'); // Assuming a container to display images
+      imageContainer.innerHTML = ''; // Clear previous images
 
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Delete';
-            deleteButton.onclick = () => deleteImage(image);
+      // Loop through each image and display it
+      images.forEach(image => {
+        const img = document.createElement('img');
+        img.src = `https://emojicamera.vercel.app/api/images/${image.filename}`; // Corrected image source URL
+        img.alt = 'Uploaded Image';
+        img.style.maxWidth = '200px'; // Optional styling
 
-            container.appendChild(img);
-            container.appendChild(deleteButton);
-          });
-        });
-    }
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteImage(image.filename);
 
-    // Delete an image from the server
-    function deleteImage(filename) {
-      fetch(`http://localhost:3000/delete/${filename}`, { method: 'DELETE' })
-        .then(response => response.json())
-        .then(() => fetchImages())
-        .catch(error => console.error('Delete error:', error));
-    }
+        const imageWrapper = document.createElement('div');
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(deleteButton);
 
-    fetchImages(); // Initial fetch
+        imageContainer.appendChild(imageWrapper);
+      });
+    })
+    .catch(error => console.error('Error fetching images:', error));
+}
+
+// Delete an image by filename
+function deleteImage(filename) {
+  fetch(`https://emojicamera.vercel.app/api/delete/${filename}`, {  // Adjusted URL
+    method: 'DELETE'
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        console.log('Image deleted successfully:', result);
+        fetchAndDisplayImages(); // Refresh images after deletion
+      } else {
+        console.error('Failed to delete image:', result.message);
+      }
+    })
+    .catch(error => console.error('Error deleting image:', error));
+}
+
+// Initial fetch and display of images when the page loads
+fetchAndDisplayImages();
+
   </script>
 </body>
 </html>
